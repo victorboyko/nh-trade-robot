@@ -46,7 +46,7 @@ public class MineHubConnector {
 	public static Map<String, Coin> getBPCReducedPrices(double reductionPercent, Set<String> limit) throws IOException, ParseException {
 		Map<String, Coin> result = new HashMap<>();
 		
-		String currData = HttpUtil.getStringByURL(new URL("http://proxypool.info:8018/minehub?lbry=1000000&key=123123123"));
+		String currData = HttpUtil.getStringByURL(new URL("http://proxypool.info:8018/minehub?lbry=1000000&key=123123123&equihash=1000000"));
 		JSONObject topJson = (JSONObject)new JSONParser().parse(currData);
 		for(Object node : topJson.entrySet()) {
 			Map.Entry entry = (Map.Entry)node;

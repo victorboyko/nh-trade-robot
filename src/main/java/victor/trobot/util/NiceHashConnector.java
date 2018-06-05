@@ -121,10 +121,33 @@ public class NiceHashConnector {
 			throw new IllegalStateException(jsonStr);
 		}
 	}
+	
+	public static void orderRefill(String apiId, String apiKey, Location location, Algo algo, int orderId, double amount) throws IOException, ParseException {
+		String jsonStr = HttpUtil.getStringByURL(new URL(String.format(
+				"https://api.nicehash.com/api?method=orders.refill&id=%s&key=%s&location=%d&algo=%d&order=%d&amount=%2.4f", 
+					apiId, apiKey, location.code, algo.code, orderId, amount)));
+		JSONObject topJson = (JSONObject)new JSONParser().parse(jsonStr);
+		Object o = topJson.get("result");
+		if (o == null || !o.toString().contains("success")) {
+			throw new IllegalStateException(jsonStr);
+		}
+	}
+	
+	public static double getBalance(String apiId, String apiKey) throws IOException, ParseException {
+		String jsonStr = HttpUtil.getStringByURL(new URL(String.format(
+				"https://api.nicehash.com/api?method=balance&id=%s&key=%s", apiId, apiKey)));
+		JSONObject topJson = (JSONObject)new JSONParser().parse(jsonStr);
+		Object o = topJson.get("result");
+		Object balanceObj;
+		if (o == null || (balanceObj = ((JSONObject)o).get("balance_confirmed")) == null ||  o.toString().contains("error")) {
+			throw new IllegalStateException(jsonStr);
+		}
+		return Double.valueOf(balanceObj.toString());
+	}
 
 	public static void main(String[] args) throws Exception {
 		//System.out.println(getAllOrders(Location.US, Algo.LBRY));
-		System.out.println(getMyOrders(Location.EU, Algo.LBRY, "503949", "3335d78f-3fe6-6e6c-36e2-101a68938117"));
+		System.out.println(getMyOrders(Location.EU, Algo.EQUIHASH, "503949", "3335d78f-3fe6-6e6c-36e2-101a68938117"));
 	}
 
 }
