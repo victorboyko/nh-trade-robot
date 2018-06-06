@@ -7,6 +7,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.commons.lang.ArrayUtils;
 import org.apache.log4j.Logger;
 import org.json.simple.parser.ParseException;
 
@@ -27,12 +28,12 @@ public class Starter {
 	public static void main(String[] args) {
 		
 		
-		logger.info("Trade robot started");
-		String[] coinAbrs = new String[] {"ZCL","HUSH"};
+		String[] coinAbrs = new String[] {"ZEN"};
+		logger.info("Trade robot started for " + ArrayUtils.toString(coinAbrs));
 		
 		Map<String,Pool> pools = new HashMap<>();
 		//pools.put("LBC", new Pool("lbry.suprnova.cc", 6257, "log121.nh1", "d=2222"));
-		pools.put("COMBINED", new Pool("proxypool.info", 7780, "nhUser", "x"));
+		pools.put("COMBINED", new Pool("solo-zen.2miners.com", 7070, "znkbBJ88yUht922ZKB12HwYJAkTGwRzjafk.nhRig", "x"));
 		
 		//int algoIds[] = new int[] {24, 24, 24, 24};
 		
@@ -49,12 +50,12 @@ public class Starter {
 			List<Order> myOrders = null;
 			
 			try {
-				orders = NiceHashConnector.getAllOrders(Location.EU, Algo.EQUIHASH);
-				myOrders = NiceHashConnector.getMyOrders(Location.EU, Algo.EQUIHASH, apiId, apiKey);
+				orders = NiceHashConnector.getAllOrders(Location.US, Algo.EQUIHASH);
+				myOrders = NiceHashConnector.getMyOrders(Location.US, Algo.EQUIHASH, apiId, apiKey);
 				if (myOrders.size() > 1) {
 					for(Order o : myOrders) {
 						try {
-							NiceHashConnector.removeOrder(apiId, apiKey, Location.EU, Algo.EQUIHASH, o.id);
+							NiceHashConnector.removeOrder(apiId, apiKey, Location.US, Algo.EQUIHASH, o.id);
 						} catch (Exception e) {
 							logger.fatal("Failed to remove order #" + o.id); 
 						}
@@ -77,15 +78,14 @@ public class Starter {
 			try {
 				minehubPrices = MineHubConnector.getBPCReducedPrices(23.0d, new HashSet<>(Arrays.asList(coinAbrs)));
 				
-				Coin zclhushCoin = minehubPrices.get("ZCL").getPrice() > minehubPrices.get("HUSH").getPrice()
-						? minehubPrices.get("ZCL") : minehubPrices.get("HUSH");
+				Coin zclhushCoin = minehubPrices.get("ZEN");
 				minehubPrices.put("COMBINED", zclhushCoin);
 				
 				if (minehubPrices.size() < coinAbrs.length) {
 					logger.error("Can't get all requested prices from MineHub");
 					try {
 						if (currentOrder != null) {
-							NiceHashConnector.removeOrder(apiId, apiKey, Location.EU, Algo.EQUIHASH, currentOrder.id);
+							NiceHashConnector.removeOrder(apiId, apiKey, Location.US, Algo.EQUIHASH, currentOrder.id);
 						}
 					} catch (Exception e) {
 						logger.fatal("Failed to remove order #" + currentOrder.id); 
@@ -108,7 +108,7 @@ public class Starter {
 					logger.info(String.format("closing order #%d as it's now overpriced", currentOrder.id)); // TODO - add details
 					boolean removed = false;
 					try {
-						NiceHashConnector.removeOrder(apiId, apiKey, Location.EU, Algo.EQUIHASH, currentOrder.id);
+						NiceHashConnector.removeOrder(apiId, apiKey, Location.US, Algo.EQUIHASH, currentOrder.id);
 						removed = true;
 					} catch (Exception e) {
 						logger.error("Failed to remove order #" + currentOrder.id + ". Error: " + e); 
@@ -128,7 +128,7 @@ public class Starter {
 						try {
 							Double balance = NiceHashConnector.getBalance(apiId, apiKey);
 							if (balance >= 0.005d) {
-								NiceHashConnector.orderRefill(apiId, apiKey, Location.EU, Algo.EQUIHASH, currentOrder.id, 0.005d);
+								NiceHashConnector.orderRefill(apiId, apiKey, Location.US, Algo.EQUIHASH, currentOrder.id, 0.005d);
 							}
 						} catch (Exception e) {
 							logger.error("Failed to refill order #" + currentOrder.id + ". Error: " + e); 
@@ -156,7 +156,7 @@ public class Starter {
 						
 						if (currentOrder == null) {						
 							try {
-								int orderId = NiceHashConnector.createOrder(apiId, apiKey, Location.EU, Algo.EQUIHASH, 0.01d, price, 20.0, pools.get("COMBINED"));
+								int orderId = NiceHashConnector.createOrder(apiId, apiKey, Location.US, Algo.EQUIHASH, 0.01d, price, 20.0, pools.get("COMBINED"));
 								logger.info(String.format("Order #%d created", orderId));
 							} catch (Exception e) {
 								logger.error("Failed to create new order: " + e);
@@ -164,7 +164,7 @@ public class Starter {
 						} else {
 							if ((currentOrder.workers == 0 || currentOrder.acceptedSpeed < 7.0d) && Math.abs(currentOrder.price - price) >= 0.0001d) {
 								try {
-									NiceHashConnector.updateOrderPrice(apiId, apiKey, Location.EU, Algo.EQUIHASH, currentOrder.id, price);
+									NiceHashConnector.updateOrderPrice(apiId, apiKey, Location.US, Algo.EQUIHASH, currentOrder.id, price);
 									logger.info(String.format("Order #%d price updated to %2.4f", currentOrder.id, price));
 								} catch (Exception e) {
 									logger.error(String.format("Failed to update price to %2.4f, exception : %s ", price , e.toString()));
